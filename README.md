@@ -42,3 +42,5 @@ echo "OPENAI_API_KEY='your-api-key'" >> ~/.env
 ```
 streamlit run app.py
 ```
+
+![Screenshot](chatwiki-demo.png)
