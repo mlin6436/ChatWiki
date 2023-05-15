@@ -14,6 +14,10 @@ The specific problem this project is solving is: for those who do not have ChatG
 
 This project aims to demo how to use embeddings to query live internet content using the example of Wikipedia.
 
+## Demo
+
+![Screenshot](chatwiki-demo.png)
+
 ## How to run the app
 
 ### Prerequisite
@@ -46,5 +50,3 @@ echo "OPENAI_API_KEY='your-api-key'" >> ~/.env
 ```
 streamlit run app.py
 ```
-
-![Screenshot](chatwiki-demo.png)
