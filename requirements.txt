@@ -1,5 +1,10 @@
+dotenv
+os
 streamlit
-wikipedia
+streamlit_chat
 requests
+wikipedia
+time
 bs4
+datetime
 langchain

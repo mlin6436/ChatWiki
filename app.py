@@ -1,24 +1,24 @@
 import dotenv
 import os
 import streamlit as st
+import streamlit_chat as st_chat
 import requests
 import wikipedia
+import time
 from bs4 import BeautifulSoup
+from datetime import datetime
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.llms import OpenAI
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 dotenv.load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def search_wiki(topic):
-    # get page summary
     summary = wikipedia.summary(topic, sentences = 5)
 
-    # scrap page content
     url = f"https://en.wikipedia.org/wiki/{topic}"
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
@@ -28,28 +28,9 @@ def search_wiki(topic):
     for p in p_set:
         content_text += p.text
 
-    return content_text, summary
+    return url, summary, content_text
 
-def create_prompt():
-    prompt_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-    {context}
-
-    Question: {question}
-    Answer:"""
-    PROMPT = PromptTemplate(
-        template=prompt_template, input_variables=["context", "question"]
-    )
-
-topic = st.text_input("Enter a topic to search wiki")
-
-# Bug: deal with DisambiguationError when search "thing"
-if topic:
-    with st.spinner("Searching wiki..."):
-        content, summary = search_wiki(topic)
-    st.success("Finished searching.")
-    st.write(summary)
-
+def create_embeddings(content):
     text_splitter = CharacterTextSplitter(
         separator = "\n",
         chunk_size = 2000,
@@ -58,17 +39,50 @@ if topic:
     )
     chunks = text_splitter.split_text(content)
     embeddings = OpenAIEmbeddings(openai_api_key = openai_api_key)
-    knowledge_base = FAISS.from_texts(chunks, embeddings)
     
-    query = st.text_input("Your question:")
+    FAISS.from_texts(chunks, embeddings).save_local("./")
+    return FAISS.load_local("./", embeddings)
+
+def get_response(query, knowledge_base):
+    docs = knowledge_base.similarity_search(query)
+    search_context = query + "\n\n"
+    for doc in docs:
+        search_context += doc.page_content + "\n\n"
+    messages.append(HumanMessage(content = search_context))
+    response = chatOpenAI(messages).content
+    messages.pop()
+    messages.append(HumanMessage(content = query))
+    messages.append(AIMessage(content = response))
+
+    return response
+
+chatOpenAI = ChatOpenAI(temperature = 0.7, openai_api_key = openai_api_key)
+messages = [SystemMessage(content = "You are a Q&A bot and you will answer all the questions that the user has. Just say that you don't know, don't try to make up an answer.")]
+topic = st.text_input("Enter a topic to prepare wiki content for Q&A")
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+    
+# Improvement: deal with DisambiguationError when search "thing"
+# Improvement: embeddings are re-generated every time user asked a question
+# Improvement: limited memory
+if topic:
+    with st.spinner("Searching wiki..."):
+        url, summary, content = search_wiki(topic)
+    st.write("Wikipedia content loaded from: " + url)
+    st.write("Summary: " + summary)
+    knowledge_base = create_embeddings(content)
+    
+    query = st.text_input("Ask your question here:")
     response = ""
     if query:
-        with st.spinner("Running query..."):
-            docs = knowledge_base.similarity_search(query)
-            
-            llm = OpenAI(openai_api_key = openai_api_key, temperature = 0.7)
-            chain = load_qa_chain(llm, chain_type = "stuff", prompt = create_prompt())
-            response = chain.run(input_documents = docs, question = query)
+        chat_history = st.session_state.chat_history
+        chat_history.append({'user': 'user', 'time': datetime.now().strftime("%X"), 'text': query})
+        response = get_response(query, knowledge_base)
+        chat_history.append({'user': 'bot', 'time': datetime.now().strftime("%X"), 'text': response})
+        st.session_state.chat_history = chat_history
 
-        st.success("Completed query.")
-        st.write("Answer: ", response)
+        for message in st.session_state.chat_history:
+            if message['user'] == 'user':
+                st_chat.message(f"You ({message['time']}): {message['text']}", is_user=True, key=int(time.time_ns()))
+            else:
+                st_chat.message(f"ChatWiki ({message['time']}): {message['text']}", key=int(time.time_ns()))
