@@ -4,11 +4,15 @@ Talking with Wikipedia
 
 ## What is ChatWiki
 
-ChatWiki is a simple Python application that utilises [embeddings](https://platform.openai.com/docs/guides/embeddings) and [langchain](https://github.com/hwchase17/langchain) to execute queries on Wikipedia content through ChatPGT.
+ChatWiki is a simple Python application that utilises [embeddings](https://platform.openai.com/docs/guides/embeddings) and [langchain](https://github.com/hwchase17/langchain) to execute queries on Wikipedia content through ChatPGT. 
 
 ## Why ChatWiki
 
-Unless you have ChatGPT Plus subscription, the data used to train current version of ChatGPT is up until September 2021, it also doesn't have the ability to access internet. To unlock these limitations, this project is created to demo how to use embeddings to query live Wikipedia content.
+Similar to [ChatPDF](https://github.com/mlin6436/chatpdf/tree/main), it is aimed at training ChatGPT to answer questions towards specific content. 
+
+The specific problem this project is solving is: for those who do not have ChatGPT Plus subscription, the data used to train current version of ChatGPT is up until September 2021, and it doesn't have the ability to access internet. 
+
+This project aims to demo how to use embeddings to query live internet content using the example of Wikipedia.
 
 ## How to run the app
 
