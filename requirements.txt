@@ -1,5 +1,4 @@
-dotenv
-os
+python-dotenv
 streamlit
 streamlit_chat
 requests
