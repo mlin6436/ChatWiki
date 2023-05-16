@@ -6,3 +6,4 @@ wikipedia
 bs4
 datetime
 langchain
+faiss-cpu
