@@ -3,7 +3,6 @@ streamlit
 streamlit_chat
 requests
 wikipedia
-time
 bs4
 datetime
 langchain
