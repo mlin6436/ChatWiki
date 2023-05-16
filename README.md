@@ -30,7 +30,7 @@ brew install python@3.10
 ### Install dependencies
 
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 ### Retrieve your OpenAI API key
