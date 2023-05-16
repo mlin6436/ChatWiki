@@ -2,7 +2,7 @@ python-dotenv
 streamlit
 streamlit_chat
 requests
-wikipedia
+wikipedia==1.4.0
 bs4
 datetime
 langchain
